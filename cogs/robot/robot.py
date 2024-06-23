@@ -505,6 +505,10 @@ class Robot(commands.Cog):
         if message.author.bot:
             return
         if channel.id in self.__live_sessions: # Mode live activé
+            if message.content.startswith('?'):
+                return
+            if message.content.startswith('.'):
+                return
             if datetime.now() - self.__live_sessions[channel.id] > timedelta(minutes=10):
                 return self.turn_off_live(channel) # type: ignore
             self.__live_sessions[channel.id] = datetime.now() 
