@@ -217,7 +217,6 @@ class Chatbot:
         ctx = self.get_context()
         if not ctx:
             return None
-        print(ctx)
         client = self.__cog.client
         try:
             completion = await client.chat.completions.create(
