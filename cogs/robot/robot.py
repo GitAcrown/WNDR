@@ -718,7 +718,7 @@ class Robot(commands.Cog):
             if not u:
                 continue
             total_tokens = user['output_tokens'] + user['input_tokens']
-            text.append(f"{i}. **{u.name}** -> {total_tokens}")
+            text.append(f"{i}. {u.name} - {total_tokens}")
             
         total_input = sum(user['input_tokens'] for user in users)
         total_output = sum(user['output_tokens'] for user in users)
