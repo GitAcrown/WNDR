@@ -696,7 +696,6 @@ class Robot(commands.Cog):
             await interaction.response.send_message(f"**Preset modifié** · Le preset de chatbot `{preset.name}` a été modifié avec succès.", ephemeral=True, embed=embed)
         else:
             await interaction.response.send_message("**Autorisation insuffisante** × Vous n'avez pas la permission de modifier ce preset.", ephemeral=True)
-        
 
     @chatbot_cmds.command(name='delete')
     @app_commands.rename(preset_id='identifiant')
@@ -736,7 +735,40 @@ class Robot(commands.Cog):
             return await interaction.edit_original_response(content=f"**Preset supprimé** · Le preset de chatbot `{preset.name}` a été supprimé avec succès.", view=None, embed=None)
         return await interaction.response.send_message("**Autorisation insuffisante** × Vous n'avez pas la permission de supprimer ce preset.", ephemeral=True)
         
+    @chatbot_cmds.command(name='flush')
+    @app_commands.rename(preset_id='identifiant')
+    async def chatbot_flush(self, interaction: Interaction, preset_id: int | None = None):
+        """Supprime la mémoire de conversation du chatbot
+        
+        :param preset_id: Identifiant du preset à vider (optionnel)
+        """
+        guild = interaction.guild
+        
+        if not isinstance(guild, discord.Guild) or not isinstance(interaction.user, discord.Member):
+            return await interaction.response.send_message("**Erreur** × Cette commande ne peut pas être utilisée en dehors d'un serveur.", ephemeral=True)
+        
+        # Créateur ou modérateur
+        if not interaction.user.guild_permissions.manage_guild:
+            return await interaction.response.send_message("**Autorisation insuffisante** × Vous n'avez pas la permission de vider la mémoire de conversation.", ephemeral=True)
+        
+        # Si le preset est spécifié
+        if preset_id:
+            preset = self.get_preset(guild, preset_id)
+            if not preset:
+                return await interaction.response.send_message("**Erreur** × Le preset spécifié n'existe pas.", ephemeral=True)
+            preset.clear_history()
+            return await interaction.response.send_message(f"**Mémoire vidée** · La mémoire de conversation du preset `{preset.name}` a été vidée avec succès.", ephemeral=True)    
+        
+        # Si aucun preset n'est spécifié, on prend celui chargé dans le salon
+        channel = interaction.channel
+        chatbot = self.get_session(channel) # type: ignore
+        if not chatbot:
+            return await interaction.response.send_message("**Erreur** × Aucun preset de chatbot n'a été chargé dans ce salon.", ephemeral=True)
+        chatbot.clear_history()
+        return await interaction.response.send_message(f"**Mémoire vidée** · La mémoire de conversation du preset `{chatbot.name}` a été vidée avec succès.", ephemeral=True)
+    
     @chatbot_edit.autocomplete('preset_id')
+    @chatbot_flush.autocomplete('preset_id')
     @chatbot_load.autocomplete('preset_id')
     @chatbot_delete.autocomplete('preset_id')
     async def chatbot_id_autocomplete(self, interaction: discord.Interaction, current: str):
