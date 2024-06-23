@@ -685,7 +685,7 @@ class Robot(commands.Cog):
             return []
         presets = self.get_presets(interaction.guild)
         r = fuzzy.finder(current, presets, key=lambda x: x['name'])
-        return [app_commands.Choice(name=p['name'], value=p['id']) for p in r]
+        return [app_commands.Choice(name=p['name'], value=p['id']) for p in r][:10]
     
     @chatbot_cmds.command(name='list')
     async def chatbot_list(self, interaction: Interaction):
