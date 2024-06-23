@@ -521,7 +521,9 @@ class Robot(commands.Cog):
             return await interaction.response.send_message("**Erreur** × Je ne peux pas charger de chatbot dans ce type de salon.", ephemeral=True)
         chatbot = self.get_session(chan)
         if not chatbot:
-            return await interaction.response.send_message(f"**Aucun chatbot** × Aucun preset de chatbot n'a été chargé dans le salon {chan.mention}.", ephemeral=True)
+            chatbot = self.fetch_last_session(chan)
+            if not chatbot:
+                return await interaction.response.send_message(f"**Aucun chatbot** × Aucun preset de chatbot n'a été chargé dans le salon {chan.mention}.", ephemeral=True)
 
         live_mode = False
         if chan.id in self.__live_sessions:
