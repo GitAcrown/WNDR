@@ -548,7 +548,7 @@ class Robot(commands.Cog):
             'context_size': chatbot.context_size,
             'author_id': chatbot.author_id
         }, live_mode)
-        await interaction.response.send_message(f"**Info. chatbot** · Chargé sur {chan.mention} :", ephemeral=True, embed=embed)
+        await interaction.response.send_message(f"**Info. chatbot** · Chargé sur {chan.mention} :", embed=embed)
     
     @chatbot_cmds.command(name='load')
     @app_commands.rename(preset_id='identifiant')
