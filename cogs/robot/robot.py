@@ -319,9 +319,12 @@ class Robot(commands.Cog):
         """Supprimer un preset"""
         self.data.get(guild).execute('''DELETE FROM presets WHERE id = ?''', preset_id)
         
-    def get_preset_embed(self, preset: dict):
+    def get_preset_embed(self, preset: dict, live_mode: bool = False):
         """Créer un embed pour un preset"""
-        embed = discord.Embed(title=f'***{preset['name']}***', color=pretty.DEFAULT_EMBED_COLOR)
+        if not live_mode:
+            embed = discord.Embed(title=f'***{preset['name']}***', color=pretty.DEFAULT_EMBED_COLOR)
+        else:
+            embed = discord.Embed(title=f'***{preset["name"]}*** (Mode live)', color=pretty.DEFAULT_EMBED_COLOR)
         embed.add_field(name='Instructions du preset', value=pretty.codeblock(preset['system_prompt'], 'yaml'), inline=False)
         if preset['temperature'] > 1.4:
             embed.add_field(name='Température', value=pretty.codeblock(f'{preset["temperature"]} (!)'), inline=True)
@@ -503,6 +506,35 @@ class Robot(commands.Cog):
     # GESTION DES CHATBOTS =====================================================
     
     chatbot_cmds = app_commands.Group(name='chatbot', description='Gestion des presets de chatbots', guild_only=True)
+    
+    @chatbot_cmds.command(name='info')
+    async def chatbot_info(self, interaction: Interaction, channel: discord.TextChannel | discord.Thread | None = None):
+        """Afficher les informations du chatbot chargé dans un salon
+        
+        :param channel: Salon à consulter (optionnel)
+        """
+        if not isinstance(interaction.guild, discord.Guild):
+            return await interaction.response.send_message("**Erreur** × Cette commande ne peut pas être utilisée en dehors d'un serveur.", ephemeral=True)
+        
+        chan = channel or interaction.channel
+        if not isinstance(chan, (discord.TextChannel, discord.Thread)):
+            return await interaction.response.send_message("**Erreur** × Je ne peux pas charger de chatbot dans ce type de salon.", ephemeral=True)
+        chatbot = self.get_session(chan)
+        if not chatbot:
+            return await interaction.response.send_message(f"**Aucun chatbot** × Aucun preset de chatbot n'a été chargé dans le salon {chan.mention}.", ephemeral=True)
+
+        live_mode = False
+        if chan.id in self.__live_sessions:
+            live_mode = True
+        embed = self.get_preset_embed({
+            'name': chatbot.name,
+            'system_prompt': chatbot.system_prompt,
+            'temperature': chatbot.temperature,
+            'max_completion': chatbot.max_completion,
+            'context_size': chatbot.context_size,
+            'author_id': chatbot.author_id
+        }, live_mode)
+        await interaction.response.send_message(f"**Info. chatbot** · Chargé sur {chan.mention} :", ephemeral=True, embed=embed)
     
     @chatbot_cmds.command(name='load')
     @app_commands.rename(preset_id='identifiant')
