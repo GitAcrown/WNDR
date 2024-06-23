@@ -603,6 +603,10 @@ class Robot(commands.Cog):
         if not isinstance(guild, discord.Guild) or not isinstance(interaction.user, discord.Member):
             return await interaction.response.send_message("**Erreur** × Cette commande ne peut pas être utilisée en dehors d'un serveur.", ephemeral=True)
         
+        # Pas plus de 25 presets par serveur
+        if len(self.get_presets(guild)) >= 25:
+            return await interaction.response.send_message("**Limite atteinte** × Vous avez atteint la limite de 25 presets de chatbot par serveur.", ephemeral=True)
+        
         # Vérifications -----
         tokenizer = tiktoken.get_encoding('cl100k_base')    
         if len(tokenizer.encode(system_prompt)) > context_size:
@@ -643,6 +647,56 @@ class Robot(commands.Cog):
         self.create_preset(guild, preset_data)
         embed = self.get_preset_embed(preset_data)
         await interaction.edit_original_response(content=f"**Preset créé** · Le preset de chatbot `{view.value}` a été créé avec succès.", embed=embed, view=None)
+
+    @chatbot_cmds.command(name='edit')
+    @app_commands.rename(preset_id='identifiant', new_name='nom', new_system_prompt='initialisation', new_temperature='température', new_answer_length='longueur_réponse', new_context_size='taille_contexte')
+    async def chatbot_edit(self, interaction: Interaction, preset_id: int, new_name: str | None = None, new_system_prompt: str | None = None, new_temperature: app_commands.Range[float, 0.1, 2.0] | None = None, new_answer_length: app_commands.Range[int, 1, 1024] | None = None, new_context_size: app_commands.Range[int, 1, 2048] | None = None):
+        """Modifier un preset de chatbot
+        
+        :param preset_id: Identifiant du preset à modifier
+        :param new_name: Nouveau nom du preset
+        :param new_system_prompt: Nouvelles instructions d'initialisation
+        :param new_temperature: Nouveau niveau de créativité
+        :param new_answer_length: Nouvelle longueur maximale des réponses
+        :param new_context_size: Nouvelle taille du contexte
+        """
+        guild = interaction.guild
+        
+        if not isinstance(guild, discord.Guild) or not isinstance(interaction.user, discord.Member):
+            return await interaction.response.send_message("**Erreur** × Cette commande ne peut pas être utilisée en dehors d'un serveur.", ephemeral=True)
+        
+        preset = self.get_preset(guild, preset_id)
+        if not preset:
+            return await interaction.response.send_message("**Erreur** × Le preset spécifié n'existe pas.", ephemeral=True)
+        
+        if new_name:
+            if new_name in [p['name'] for p in self.get_presets(guild)]:
+                return await interaction.response.send_message("**Nom déjà utilisé** × Un preset de chatbot porte déjà ce nom.", ephemeral=True)
+            if len(new_name) > 32:
+                return await interaction.response.send_message("**Nom trop long** × Le nom du preset ne peut pas dépasser 32 caractères.", ephemeral=True)
+            
+        if new_system_prompt:
+            ctx_size = new_context_size or preset.context_size
+            tokenizer = tiktoken.get_encoding('cl100k_base')
+            if len(tokenizer.encode(new_system_prompt)) > ctx_size:
+                return await interaction.response.send_message("**Instructions trop longues** × La *taille du contexte* est trop petite pour contenir les nouvelles instructions d'initialisation.", ephemeral=True)
+            
+        preset_data = {
+            'name': new_name or preset.name,
+            'system_prompt': new_system_prompt or preset.system_prompt,
+            'temperature': new_temperature or preset.temperature,
+            'max_completion': new_answer_length or preset.max_completion,
+            'context_size': new_context_size or preset.context_size,
+            'author_id': preset.author_id
+        }
+        
+        if interaction.user.guild_permissions.manage_guild or interaction.user.id == preset.author_id:
+            self.update_preset(guild, preset_id, preset_data)
+            embed = self.get_preset_embed(preset_data)
+            await interaction.response.send_message(f"**Preset modifié** · Le preset de chatbot `{preset.name}` a été modifié avec succès.", ephemeral=True, embed=embed)
+        else:
+            await interaction.response.send_message("**Autorisation insuffisante** × Vous n'avez pas la permission de modifier ce preset.", ephemeral=True)
+        
 
     @chatbot_cmds.command(name='delete')
     @app_commands.rename(preset_id='identifiant')
