@@ -747,25 +747,25 @@ class Robot(commands.Cog):
         if not isinstance(guild, discord.Guild) or not isinstance(interaction.user, discord.Member):
             return await interaction.response.send_message("**Erreur** × Cette commande ne peut pas être utilisée en dehors d'un serveur.", ephemeral=True)
         
-        # Créateur ou modérateur
-        if not interaction.user.guild_permissions.manage_guild:
-            return await interaction.response.send_message("**Autorisation insuffisante** × Vous n'avez pas la permission de vider la mémoire de conversation.", ephemeral=True)
-        
         # Si le preset est spécifié
         if preset_id:
             preset = self.get_preset(guild, preset_id)
             if not preset:
                 return await interaction.response.send_message("**Erreur** × Le preset spécifié n'existe pas.", ephemeral=True)
-            preset.clear_history()
-            return await interaction.response.send_message(f"**Mémoire vidée** · La mémoire de conversation du preset `{preset.name}` a été vidée avec succès.", ephemeral=True)    
+            if interaction.user.guild_permissions.manage_guild or interaction.user.id == preset.author_id:
+                preset.clear_history()
+                return await interaction.response.send_message(f"**Mémoire vidée** · La mémoire de conversation du preset `{preset.name}` a été vidée avec succès.", ephemeral=True)
+            return await interaction.response.send_message("**Autorisation insuffisante** × Vous n'avez pas la permission de vider la mémoire de ce preset.", ephemeral=True)    
         
         # Si aucun preset n'est spécifié, on prend celui chargé dans le salon
         channel = interaction.channel
         chatbot = self.get_session(channel) # type: ignore
         if not chatbot:
             return await interaction.response.send_message("**Erreur** × Aucun preset de chatbot n'a été chargé dans ce salon.", ephemeral=True)
-        chatbot.clear_history()
-        return await interaction.response.send_message(f"**Mémoire vidée** · La mémoire de conversation du preset `{chatbot.name}` a été vidée avec succès.", ephemeral=True)
+        if interaction.user.guild_permissions.manage_guild or interaction.user.id == chatbot.author_id:
+            chatbot.clear_history()
+            return await interaction.response.send_message(f"**Mémoire vidée** · La mémoire de conversation du preset `{chatbot.name}` a été vidée avec succès.", ephemeral=True)
+        return await interaction.response.send_message("**Autorisation insuffisante** × Vous n'avez pas la permission de vider la mémoire de ce preset.", ephemeral=True)
     
     @chatbot_edit.autocomplete('preset_id')
     @chatbot_flush.autocomplete('preset_id')
