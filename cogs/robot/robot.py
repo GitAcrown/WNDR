@@ -741,7 +741,9 @@ class Robot(commands.Cog):
         
     @chatstats_cmds.command(name='top')
     async def chatstats_top(self, interaction: Interaction, top: app_commands.Range[int, 3, 30] = 10):
-        """Afficher le top des utilisateurs les plus actifs"""
+        """Afficher le top des utilisateurs les plus actifs
+        
+        :param top: Nombre d'utilisateurs à afficher (3 - 30)"""
         guild = interaction.guild
         
         if not isinstance(guild, discord.Guild):
