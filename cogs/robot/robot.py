@@ -396,6 +396,10 @@ class Robot(commands.Cog):
         self.data.get('global').execute('''INSERT OR IGNORE INTO usage VALUES (?, ?, ?, ?, ?)''', user.id, input_tokens, output_tokens, datetime.now().month, 0)
         self.data.get('global').execute('''UPDATE usage SET input_tokens = ?, output_tokens = ? WHERE user_id = ?''', input_tokens, output_tokens, user.id)
         
+    def clear_usage(self):
+        """Efface toutes les données de tracking des utilisateurs sauf du mois en cours"""
+        self.data.get('global').execute('''DELETE FROM usage WHERE month != ?''', datetime.now().month)     
+        
     def ban_user(self, user: discord.User | discord.Member):
         """Bannir un utilisateur du service"""
         self.data.get('global').execute('''UPDATE usage SET banned = 1 WHERE user_id = ?''', user.id)
@@ -742,6 +746,8 @@ class Robot(commands.Cog):
         
         if not isinstance(guild, discord.Guild):
             return await interaction.response.send_message("**Erreur** × Cette commande ne peut pas être utilisée en dehors d'un serveur.", ephemeral=True)
+        
+        self.clear_usage()
         
         users = self.data.get('global').fetchall('''SELECT * FROM usage WHERE banned = 0 ORDER BY output_tokens DESC LIMIT ?''', top)
         if not users:
