@@ -755,7 +755,8 @@ class Robot(commands.Cog):
         
         self.clear_usage()
         
-        users = self.data.get('global').fetchall('''SELECT * FROM usage WHERE banned = 0 ORDER BY output_tokens DESC LIMIT ?''', top)
+        # classer par tokens d'entrée + sortie
+        users = self.data.get('global').fetchall('''SELECT * FROM usage WHERE banned = 0 ORDER BY input_tokens + output_tokens DESC LIMIT ?''', top)
         if not users:
             return await interaction.response.send_message("**Aucune donnée** × Aucune donnée n'est disponible pour le moment.", ephemeral=True)
         users = [user for user in users if guild.get_member(user['user_id'])]
