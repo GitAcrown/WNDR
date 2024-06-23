@@ -585,8 +585,8 @@ class Robot(commands.Cog):
         
         self.attach_chatbot(channel, preset)
         if live_mode:
-            return await interaction.response.send_message(f"**Chatbot {'chargé' if not replacing else 'remplacé'}** · Le preset de chatbot `{preset.name}` a été chargé dans ce thread en mode live.\nLe **mode live** vous permet de recevoir des réponses automatiques, il se désactivera automatiquement après 10 minutes sans activité. Vous pourrez le réactiver avec la même commande.", ephemeral=True)
-        await interaction.response.send_message(f"**Chatbot {'chargé' if not replacing else 'remplacé'}** · Le preset de chatbot `{preset.name}` a été chargé dans ce salon.", ephemeral=True)
+            return await interaction.response.send_message(f"**Chatbot {'chargé' if not replacing else 'remplacé'}** · Le preset de chatbot `{preset.name}` a été chargé dans ce thread en mode live.\nLe **mode live** vous permet de recevoir des réponses automatiques, il se désactivera automatiquement après 10 minutes sans activité. Vous pourrez le réactiver avec la même commande.")
+        await interaction.response.send_message(f"**Chatbot {'chargé' if not replacing else 'remplacé'}** · Le preset de chatbot `{preset.name}` a été chargé dans ce salon.")
     
     @chatbot_cmds.command(name='create')
     @app_commands.rename(system_prompt='initialisation', temperature='température', answer_length='longueur_réponse', context_size='taille_contexte')
