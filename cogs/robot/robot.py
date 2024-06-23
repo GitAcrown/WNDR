@@ -736,6 +736,7 @@ class Robot(commands.Cog):
             return await interaction.edit_original_response(content=f"**Preset supprimé** · Le preset de chatbot `{preset.name}` a été supprimé avec succès.", view=None, embed=None)
         return await interaction.response.send_message("**Autorisation insuffisante** × Vous n'avez pas la permission de supprimer ce preset.", ephemeral=True)
         
+    @chatbot_edit.autocomplete('preset_id')
     @chatbot_load.autocomplete('preset_id')
     @chatbot_delete.autocomplete('preset_id')
     async def chatbot_id_autocomplete(self, interaction: discord.Interaction, current: str):
