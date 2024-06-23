@@ -4,6 +4,7 @@ import logging
 from os import system
 import re
 from typing import Iterable
+from regex import F
 import unidecode
 from openai import AsyncOpenAI
 from datetime import datetime, timedelta
@@ -341,8 +342,11 @@ class Robot(commands.Cog):
         embed.add_field(name='Consom. estimée*', value=f'**{level}** (*{CONSUM_LEVELS[level]["label"]}*)', inline=True)
         
         author = self.bot.get_user(preset['author_id'])
+        footer = ''
         if author:
-            embed.set_footer(text=f'Auteur : {author} | (*) Basée sur les paramètres et non sur les données réelles')
+            footer = f'Auteur : {author} | '
+        footer += '(*) Basée sur les paramètres et non sur les données réelles'
+        embed.set_footer(text=footer)
         return embed
         
     # ----- Gestion des sessions -----
