@@ -40,7 +40,7 @@ class Misc(commands.Cog):
         await interation.response.defer()
         await asyncio.sleep(random.uniform(0.5, 1.5))
         emoji = "❤️" if prc >= 50 else "💔"
-        await interation.followup.send(f"# __Compabilité amoureuse__\n**{user_a.display_name}** et **{user_b.display_name}** sont compatibles à **{prc}%** {emoji}")
+        await interation.followup.send(f"# :two_hearts: Compatibilité amoureuse :love_letter:\n**{user_a.mention}** et **{user_b.mention}** sont compatibles à **{prc}%** {emoji}", allowed_mentions=discord.AllowedMentions.none())
         
 async def setup(bot):
     await bot.add_cog(Misc(bot))
