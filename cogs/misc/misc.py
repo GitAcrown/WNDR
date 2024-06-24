@@ -38,7 +38,7 @@ class Misc(commands.Cog):
         seed = ''.join(sorted(names))
         prc = random.Random(seed).randint(0, 100)
         await interation.response.defer()
-        await asyncio.sleep(random.randint(1, 3))
+        await asyncio.sleep(random.uniform(0.5, 1.5))
         emoji = "❤️" if prc >= 50 else "💔"
         await interation.followup.send(f"# __Compabilité amoureuse__\n**{user_a.display_name}** et **{user_b.display_name}** sont compatibles à **{prc}%** {emoji}")
         
