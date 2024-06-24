@@ -1,10 +1,7 @@
 import asyncio
-from hmac import new
 import logging
-from os import system
 import re
 from typing import Iterable
-from regex import F
 import unidecode
 from openai import AsyncOpenAI
 from datetime import datetime, timedelta
