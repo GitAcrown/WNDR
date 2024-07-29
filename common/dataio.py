@@ -249,6 +249,24 @@ class ModelDataManager:
         with closing(self.conn.cursor()) as cursor:
             cursor.execute(query, args)
             return cursor.fetchall()
+
+    def evaluate(self, query: str, *args: Any, fetchback: bool = True, commit: bool = True) -> Any:
+        """Exécute une requête SQL sur la base de données et renvoie le résultat.
+
+        :param query: Requête SQL
+        :param args: Arguments de la requête
+        :param fetchback: Si `True`, renvoie le résultat de la requête
+        :param commit: Si `True`, enregistre les modifications
+        :return: Résultat de la requête
+        """
+        with closing(self.conn.cursor()) as cursor:
+            cursor.execute(query, args)
+            r = None
+            if fetchback:
+                r = cursor.fetchone()
+        if commit:
+            self.conn.commit()
+        return r
         
     def commit(self) -> None:
         """Enregistre manuellement les modifications sur la base de données."""
