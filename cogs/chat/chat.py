@@ -186,7 +186,7 @@ class ChatSession:
         }
         if name:
             payload['name'] = name
-        self._history.append({'timestamp': datetime.now(), 'payload': payload})
+        self._history.append({'timestamp': datetime.now().timestamp(), 'payload': payload})
         self._maybe_save()
         return payload
         
@@ -201,7 +201,7 @@ class ChatSession:
         }
         if name:
             payload['name'] = name
-        self._history.append({'timestamp': datetime.now(), 'payload': payload})
+        self._history.append({'timestamp': datetime.now().timestamp(), 'payload': payload})
         self._maybe_save()
         return payload
         
@@ -209,7 +209,7 @@ class ChatSession:
         """Supprime un message de l'historique."""
         if isinstance(timestamp, datetime):
             timestamp = timestamp.timestamp()
-        self._history = [h for h in self._history if h['timestamp'].timestamp() != timestamp]
+        self._history = [h for h in self._history if h['timestamp'] != timestamp]
         self._maybe_save()
         
     def clear_history(self):
