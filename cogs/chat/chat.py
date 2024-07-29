@@ -161,7 +161,7 @@ class ChatSession:
     
     def _save_history(self):
         self.__cog.data.get(self.guild).execute("DELETE FROM sessions WHERE chatbot_id = ?", self.chatbot.id)
-        self._history = [h for h in self._history if (datetime.now() - h['timestamp']).total_seconds() < HISTORY_MESSAGES_EXPIRATION] # On garde que les messages récents
+        self._history = [h for h in self._history if (datetime.now().timestamp() - h['timestamp']) < HISTORY_MESSAGES_EXPIRATION]
         if not self._history:
             return
         self.__cog.data.get(self.guild).executemany("INSERT INTO sessions VALUES (?, ?, ?)", [(self.chatbot.id, h['timestamp'], json.dumps(h['payload'])) for h in self._history])
