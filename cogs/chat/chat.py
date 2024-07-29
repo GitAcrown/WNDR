@@ -565,7 +565,7 @@ class Chat(commands.Cog):
             else:
                 text = completion.text
 
-            text = f"{context_author.mention} {text}"
+            text = f"[{context_author.mention} : *{context}*] {text}"
                 
             if usage.completion_tokens > 0 or usage.prompt_tokens > 0:
                 self.update_usage(context_author.id, usage.prompt_tokens, usage.completion_tokens)
