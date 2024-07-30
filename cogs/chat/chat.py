@@ -269,6 +269,7 @@ class ChatSession:
                 temperature=self.chatbot.temperature
             )
         except Exception as e:
+            print(e)
             logger.error(f"ERREUR OPENAI : {e}", exc_info=True)
             return None 
         
