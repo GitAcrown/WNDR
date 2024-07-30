@@ -6,7 +6,7 @@ from pathlib import Path
 import random
 import re
 from collections import namedtuple
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Literal
 
 import discord
@@ -31,7 +31,7 @@ GPT_USAGE = namedtuple('GPTUsage', ['prompt_tokens', 'completion_tokens'])
 DEFAULT_PROMPT = "Tu es un chatbot serviable qui répond à toutes les questions qu'on te pose de manière pertinente en utilisant un langage naturel, fluide et en étant le plus synthétique possible. Tu utilises un ton amical et familier pour t'adresser à l'utilisateur."
 
 def check_botreset(interaction: Interaction):
-    return interaction.user.id == 172376505354158080 or interaction.permissions.administrator
+    return interaction.user.id == 172376505354158080 or interaction.permissions.manage_messages
 
 class AskChatbotModal(discord.ui.Modal):
     def __init__(self):
@@ -217,9 +217,12 @@ class ChatSession:
         self._history = [h for h in self._history if h['timestamp'] != timestamp]
         self._maybe_save()
         
-    def clear_history(self):
+    def clear_history(self, since: datetime | None = None):
         """Supprime tout l'historique."""
-        self._history = []
+        if since:
+            self._history = [h for h in self._history if h['timestamp'] < since.timestamp()]
+        else:
+            self._history = []
         self._maybe_save()
         
     # Contexte de conversation
@@ -704,13 +707,24 @@ class Chat(commands.Cog):
             
     @app_commands.check(check_botreset)
     @app_commands.command(name='chatbotreset')
-    async def chatbot_reset(self, interaction: Interaction):
+    @app_commands.rename(since='depuis')
+    @app_commands.choices(since=[
+        app_commands.Choice(name='Tout', value='all'), 
+        app_commands.Choice(name='Dernière heure', value='hour'),
+        app_commands.Choice(name='Dernier jour', value='day'),
+        app_commands.Choice(name='Dernière semaine', value='week')])
+    async def chatbot_reset(self, interaction: Interaction, since: str = 'all'):
         """Efface la mémoire du chatbot actuellement chargé."""  
         if not isinstance(interaction.guild, discord.Guild):
             return await interaction.response.send_message("**Erreur** × Cette commande ne peut être utilisée que sur un serveur.", ephemeral=True)
         if session := self.get_chat_session(interaction.guild):
-            session.clear_history()
-            await interaction.response.send_message("**Mémoire effacée** × L'historique de la session de chat a été supprimé.")
+            if since == 'all':
+                session.clear_history()
+                await interaction.response.send_message("**Mémoire effacée** × L'historique de la session de chat a été supprimé.")
+            else:
+                since_dt = datetime.now() - {'hour': timedelta(hours=1), 'day': timedelta(days=1), 'week': timedelta(weeks=1)}[since]
+                session.clear_history(since_dt)
+            await interaction.response.send_message("**Mémoire effacée** × L'historique de la session de chat a été supprimé depuis la date spécifiée.")
         else:
             await interaction.response.send_message("**Erreur** × Aucun chatbot n'est actuellement chargé sur ce serveur.", ephemeral=True)
     
