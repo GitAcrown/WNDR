@@ -271,7 +271,7 @@ class ChatSession:
         except Exception as e:
             if 'invalid_image' in str(e):
                 # On efface les messages contenant des liens d'images
-                self._history = [h for h in self._history if 'image_url' not in h['payload']['content'][0]]
+                self._history = [h for h in self._history if h['payload']['content'][0]['type'] != 'image_url']
                 self._maybe_save()
             logger.error(f"ERREUR OPENAI : {e}", exc_info=True)
             return None 
