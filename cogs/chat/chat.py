@@ -22,7 +22,8 @@ from common.utils import fuzzy, pretty
 logger = logging.getLogger(f'WANDR.{__name__.split(".")[-1]}')
 
 AUTO_CACHE_SAVE_DELAY = 300 # secondes
-HISTORY_MESSAGES_EXPIRATION = 604800 # secondes
+HISTORY_COMPLETION_EXPIRATION = 60 * 60 * 24 * 7 # 1 semaine
+HISTORY_VISION_EXPIRATION = 60 * 60 * 2 # 2 heures  
 MAX_CHATBOT_PER_GUILD = 5
 MAX_CHATBOT_IMMUNE_GUILDS = [328632789836496897] # Serveurs où les chatbots peuvent être créés sans limite
 GPT_COMPLETION = namedtuple('GPTCompletion', ['text', 'finish_reason'])
@@ -166,7 +167,10 @@ class ChatSession:
     
     def _save_history(self):
         self.__cog.data.get(self.guild).execute("DELETE FROM sessions WHERE chatbot_id = ?", self.chatbot.id)
-        self._history = [h for h in self._history if (datetime.now().timestamp() - h['timestamp']) < HISTORY_MESSAGES_EXPIRATION]
+        
+        self._history = [h for h in self._history if h['timestamp'] > (datetime.now().timestamp() - HISTORY_VISION_EXPIRATION) and 'image_url' not in str(h['payload'])]
+        self._history = [h for h in self._history if h['timestamp'] > (datetime.now().timestamp() - HISTORY_COMPLETION_EXPIRATION)]
+        
         if not self._history:
             return
         self.__cog.data.get(self.guild).executemany("INSERT INTO sessions VALUES (?, ?, ?)", [(self.chatbot.id, h['timestamp'], json.dumps(h['payload'])) for h in self._history])
