@@ -30,6 +30,8 @@ GPT_USAGE = namedtuple('GPTUsage', ['prompt_tokens', 'completion_tokens'])
 
 DEFAULT_PROMPT = "Tu es un chatbot serviable qui répond à toutes les questions qu'on te pose de manière pertinente en utilisant un langage naturel, fluide et en étant le plus synthétique possible. Tu utilises un ton amical et familier pour t'adresser à l'utilisateur."
 
+def check_botreset(interaction: Interaction):
+    return interaction.user.id == 172376505354158080 or interaction.permissions.administrator
 
 class AskChatbotModal(discord.ui.Modal):
     def __init__(self):
@@ -269,10 +271,6 @@ class ChatSession:
                 temperature=self.chatbot.temperature
             )
         except Exception as e:
-            if 'invalid_image' in str(e):
-                # On efface les messages contenant des liens d'images
-                self._history = [h for h in self._history if h['payload']['content'][0]['type'] != 'image_url']
-                self._maybe_save()
             logger.error(f"ERREUR OPENAI : {e}", exc_info=True)
             return None 
         
@@ -509,7 +507,7 @@ class Chat(commands.Cog):
             async with channel.typing():
                 result = await chatsession.get_completion(content, image_url, name=prompt_message.author.name)
                 if not result:
-                    await prompt_message.reply(f"**Erreur OpenAI** × Impossible de générer une réponse.", delete_after=10)
+                    await prompt_message.reply(f"**Erreur OpenAI** × Impossible de générer une réponse.\nEssayez `/chatbotreset` si l'erreur persiste.", delete_after=15)
                     return None
                 
                 completion, usage = result
@@ -704,7 +702,7 @@ class Chat(commands.Cog):
             self.create_chat_session(interaction.guild, view.selected_chatbot)
             await interaction.edit_original_response(content=f"{pre_text} · `{view.selected_chatbot.name}` a été chargé sur ce serveur.", view=None, embed=None)
             
-    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.check(check_botreset)
     @app_commands.command(name='chatbotreset')
     async def chatbot_reset(self, interaction: Interaction):
         """Efface la mémoire du chatbot actuellement chargé."""  
