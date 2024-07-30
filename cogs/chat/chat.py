@@ -29,8 +29,6 @@ MAX_CHATBOT_IMMUNE_GUILDS = [328632789836496897] # Serveurs où les chatbots peu
 GPT_COMPLETION = namedtuple('GPTCompletion', ['text', 'finish_reason'])
 GPT_USAGE = namedtuple('GPTUsage', ['prompt_tokens', 'completion_tokens'])
 
-DEFAULT_PROMPT = "Tu es un chatbot serviable qui répond à toutes les questions qu'on te pose de manière pertinente en utilisant un langage naturel, fluide et en étant le plus synthétique possible. Tu utilises un ton amical et familier pour t'adresser à l'utilisateur."
-
 def check_botreset(interaction: Interaction):
     return interaction.user.id == 172376505354158080 or interaction.permissions.manage_messages
 
