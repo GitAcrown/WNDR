@@ -714,7 +714,9 @@ class Chat(commands.Cog):
         app_commands.Choice(name='Dernier jour', value='day'),
         app_commands.Choice(name='Dernière semaine', value='week')])
     async def chatbot_reset(self, interaction: Interaction, since: str = 'all'):
-        """Efface la mémoire du chatbot actuellement chargé."""  
+        """Efface la mémoire du chatbot actuellement chargé.
+        
+        :param since: Supprimer l'historique depuis une certaine date (optionnel)"""  
         if not isinstance(interaction.guild, discord.Guild):
             return await interaction.response.send_message("**Erreur** × Cette commande ne peut être utilisée que sur un serveur.", ephemeral=True)
         if session := self.get_chat_session(interaction.guild):
