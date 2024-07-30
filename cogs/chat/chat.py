@@ -631,6 +631,9 @@ class Chat(commands.Cog):
         if usage:
             self.update_usage(transcript_author.id, completion_tokens=round(cost))
         
+        if len(full_text) > 1900:
+            return await audio_message.reply(f"**Transcription demandée par {transcript_author.mention} :**\n{full_text[:1900]}...", mention_author=False)
+        
         await audio_message.reply(f"**Transcription demandée par {transcript_author.mention} :**\n{full_text}", mention_author=False)
             
     
