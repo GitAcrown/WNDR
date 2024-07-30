@@ -1,5 +1,8 @@
+from io import BytesIO
+import io
 import json
 import logging
+from pathlib import Path
 import random
 import re
 from collections import namedtuple
@@ -327,10 +330,16 @@ class Chat(commands.Cog):
         )
         
         self.ask_chatbot = app_commands.ContextMenu(
-            name='Demander au chatbot',
+            name='Demander à WANDR',
             callback=self.ask_chatbot_callback, 
             extras={'description': "Demander une réponse à un chatbot concernant le message sélectionné."})
         self.bot.tree.add_command(self.ask_chatbot)
+        
+        self.audio_transcription = app_commands.ContextMenu(
+            name="Transcrire l'audio",
+            callback=self.transcript_audio_callback, 
+            extras={'description': "Demander la transcription d'un message audio."})
+        self.bot.tree.add_command(self.audio_transcription)
         
         self.__sessions_cache : dict[int, ChatSession] = {}
         
@@ -572,6 +581,58 @@ class Chat(commands.Cog):
             
             answer = await target_message.reply(text, mention_author=False, suppress_embeds=True, allowed_mentions=discord.AllowedMentions(users=[context_author], roles=False, everyone=False, replied_user=False))
             return answer
+        
+    async def handle_speech_to_text(self, interaction: Interaction, audio_message: discord.Message, transcript_author: discord.Member | discord.User):
+        await interaction.response.defer()
+        
+        if not audio_message.guild:
+            await interaction.followup.send("**Erreur** × Cette commande ne peut être utilisée que sur un serveur.", ephemeral=True)    
+            return None
+        
+        audios = [attachment for attachment in audio_message.attachments if attachment.content_type and attachment.content_type.startswith('audio')]
+        if not audios:
+            await interaction.followup.send(f"**Erreur** × Aucun fichier audio n'a été trouvé.", ephemeral=True)
+            return None
+        
+        tracking = self.get_user(transcript_author.id)
+        if tracking and tracking['banned']:
+            return
+        
+        await interaction.followup.send(f"Transcription en cours de traitement pour le message de {audio_message.author.mention}...", ephemeral=True)
+        
+        full_text = ''
+        full_duration = 0
+        for aud in audios:
+            full_duration += aud.duration if aud.duration else 0
+            buffer = io.BytesIO()
+            buffer.name = aud.filename
+            await aud.save(buffer)
+            buffer.seek(0)
+            try:
+                transcript = await self.client.audio.transcriptions.create(
+                    model='whisper-1',
+                    file=buffer
+                )
+            except Exception as e:
+                logger.error(f"ERREUR OPENAI : {e}", exc_info=True)
+                return None
+
+            full_text += transcript.text + '\n'
+        
+        if not full_text:
+            await interaction.followup.send(f"**Erreur** × Aucun texte n'a pu être transcrit depuis ce(s) fichier(s) audio.")
+            return None
+        
+        await interaction.delete_original_response()
+        
+        usage = self.get_user(transcript_author.id)
+        # 0.006$ par minute de transcription = 10 000 tokens par minute 
+        cost = (full_duration / 60) * 10000
+        if usage:
+            self.update_usage(transcript_author.id, completion_tokens=round(cost))
+        
+        await audio_message.reply(f"**Transcription demandée par {transcript_author.mention} :**\n{full_text}", mention_author=False)
+            
     
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -600,6 +661,14 @@ class Chat(commands.Cog):
         await modal.wait()
         if modal.ask.value:
             return await self.handle_context_message(message, modal.ask.value, interaction.user)
+        
+    async def transcript_audio_callback(self, interaction: Interaction, message: discord.Message):
+        """Callback pour demander la transcription d'un message audio via le menu contextuel."""
+        if interaction.channel_id != message.channel.id:
+            return await interaction.response.send_message("**Action impossible** × Le message doit être dans le même salon", ephemeral=True)
+        if not message.attachments:
+            return await interaction.response.send_message("**Erreur** × Aucun fichier n'est attaché au message.", ephemeral=True)
+        return await self.handle_speech_to_text(interaction, message, interaction.user)
         
     # COMMANDES ---------------------------------------------------------------
     
@@ -751,16 +820,16 @@ class Chat(commands.Cog):
         
         # Coût de tokens pour les demandes (input) = 0.150$ pour 1 million de tokens
         input_cost = tracking['prompt_tokens'] * (0.150 / 1000000)
-        # Coût de tokens pour les réponses (output) = 0.60$ pour 1 million de tokens
+        # Coût de tokens pour les réponses (output) = 0.60$ pour 1 million de tokens 
         output_cost = tracking['completion_tokens'] * (0.60 / 1000000)
         total_cost = input_cost + output_cost
         
         embed = discord.Embed(title=f"Statistiques d'utilisation · ***{u}***", color=pretty.DEFAULT_EMBED_COLOR)
         embed.add_field(name='Demandes | Coût', value=f"{tracking['prompt_tokens']} tokens | ${input_cost:.4f}", inline=False)
-        embed.add_field(name='Réponses | Coût', value=f"{tracking['completion_tokens']} tokens | ${output_cost:.4f}", inline=False)
+        embed.add_field(name='Réponses* | Coût', value=f"{tracking['completion_tokens']} tokens | ${output_cost:.4f}", inline=False)
         embed.add_field(name='Coût total estimé', value=f"= ${total_cost:.4f}", inline=False)
         embed.set_thumbnail(url=u.display_avatar.url)
-        embed.set_footer(text=f"Statistiques réinitialisées chaque 1er du mois")
+        embed.set_footer(text=f"Statistiques réinitialisées chaque 1er du mois | (*) Comprend la transcription audio")
         await interaction.response.send_message(embed=embed)
         
     # GESTION DES UTILISATEURS ------------------------------------------------
