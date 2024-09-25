@@ -621,6 +621,10 @@ class Chat(commands.Cog):
             return
         if not message.content or message.content[0] in ('?', '!', '.', '/'):
             return
+        if message.mention_everyone:
+            return
+        if self.bot.user and not self.bot.user.mentioned_in(message):
+            return
         
         mentioned_message = None
         if message.reference and message.reference.message_id:
