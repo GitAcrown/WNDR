@@ -122,7 +122,7 @@ class Chatbot:
 
 class ChatSession:
     def __init__(self,
-                 cog: 'Chat',
+                 cog: 'GPT',
                  guild: discord.Guild,
                  chatbot: Chatbot):
         self.__cog = cog
@@ -266,7 +266,7 @@ class ChatSession:
         return comp, usage
     
 
-class Chat(commands.Cog):
+class GPT(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.data = dataio.get_instance(self)
@@ -834,4 +834,4 @@ class Chat(commands.Cog):
         await ctx.send(f"**Utilisateur débanni** · L'utilisateur {user} a été débanni du service de chatbot.")
     
 async def setup(bot):
-    await bot.add_cog(Chat(bot))
+    await bot.add_cog(GPT(bot))
