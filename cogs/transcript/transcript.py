@@ -128,8 +128,8 @@ class Transcript(commands.Cog):
         if file_or_buffer != io.BytesIO:
             os.remove(str(file_or_buffer))
 
-        if len(transcript) > 1900:
-            return await message.reply(f"**Transcription demandée par {transcript_author}** :\n{transcript[:1900]}...", mention_author=False)
+        if len(transcript) > 1950:
+            return await message.reply(f"**Transcription demandée par {transcript_author.mention}** :\n{transcript[:1950]}...", mention_author=False)
         
         await message.reply(f"**Transcription demandée par {transcript_author}** :\n{transcript}", mention_author=False)
         
