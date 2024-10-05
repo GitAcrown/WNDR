@@ -80,7 +80,7 @@ class Transcript(commands.Cog):
                 audio = clip.audio
                 if not audio:
                     return None
-                audio_path = path.with_suffix('.mp3')
+                audio_path = path.with_suffix('.wav')
                 audio.write_audiofile(str(audio_path))
                 clip.close()
                 
