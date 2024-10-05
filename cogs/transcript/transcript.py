@@ -129,9 +129,9 @@ class Transcript(commands.Cog):
             os.remove(str(file_or_buffer))
 
         if len(transcript) > 1950:
-            return await message.reply(f"**Transcription demandée par {transcript_author.mention}** :\n{transcript[:1950]}...", mention_author=False)
+            return await message.reply(f"**Transcription demandée par {transcript_author.mention}** :\n>>> {transcript[:1950]}...", mention_author=False)
         
-        await message.reply(f"**Transcription demandée par {transcript_author}** :\n{transcript}", mention_author=False)
+        await message.reply(f"**Transcription demandée par {transcript_author.mention}** :\n>>> {transcript}", mention_author=False)
         
     async def transcript_audio_callback(self, interaction: Interaction, message: discord.Message):
         """Callback pour demander la transcription d'un message audio via le menu contextuel."""
