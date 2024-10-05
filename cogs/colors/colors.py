@@ -516,7 +516,7 @@ class Colors(commands.Cog):
         
         self.set_enabled(interaction.guild, enabled)
         if enabled:
-            await interaction.response.send_message(f"**Paramètre modifié** • Le système de rôles de couleur est maintenant **activé**\nVérifiez que mon rôle soit au dessus des rôles de couleur dans les paramètres du serveur, sans quoi je ne pourrais pas les modifier.", ephemeral=True)
+            await interaction.response.send_message(f"**Paramètre modifié** • Le système de rôles de couleur est maintenant **activé**\n-# Vérifiez que mon rôle soit au dessus des rôles de couleur dans les paramètres du serveur, sans quoi je ne pourrais pas les modifier.", ephemeral=True)
         else:
             await interaction.response.send_message(f"**Paramètre modifié** • Le système de rôles de couleur est maintenant **désactivé**.", ephemeral=True)
         
@@ -553,7 +553,7 @@ class Colors(commands.Cog):
             return await interaction.response.send_message("**Erreur** • Mon rôle doit être au dessus des rôles de couleur pour pouvoir les gérer.", ephemeral=True)
         
         # Suppression des rôles de couleur sans membre
-        try:
+        try:    
             await self.clear_color_roles(interaction.guild)
         except Exception as e:
             logger.exception(e, exc_info=True)
