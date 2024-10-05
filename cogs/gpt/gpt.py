@@ -310,12 +310,6 @@ class GPT(commands.Cog):
         self.client = AsyncOpenAI(
             api_key=self.bot.config['OPENAI_API_KEY'], # type: ignore
         )
-        
-        self.audio_transcription = app_commands.ContextMenu(
-            name="Transcrire l'audio",
-            callback=self.transcript_audio_callback)
-        self.bot.tree.add_command(self.audio_transcription)
-        
         self.__sessions_cache : dict[int, ChatSession] = {}
         
         self.__last_nochatbot_alert : dict[int, datetime] = {}
@@ -556,61 +550,6 @@ class GPT(commands.Cog):
             
             answer = await target_message.reply(text, mention_author=False, suppress_embeds=True, allowed_mentions=discord.AllowedMentions(users=[context_author], roles=False, everyone=False, replied_user=False))
             return answer
-        
-    async def handle_speech_to_text(self, interaction: Interaction, audio_message: discord.Message, transcript_author: discord.Member | discord.User):
-        await interaction.response.defer()
-        
-        if not audio_message.guild:
-            await interaction.followup.send("**Erreur** × Cette commande ne peut être utilisée que sur un serveur.", ephemeral=True)    
-            return None
-        
-        audios = [attachment for attachment in audio_message.attachments if attachment.content_type and attachment.content_type.startswith('audio')]
-        if not audios:
-            await interaction.followup.send(f"**Erreur** × Aucun fichier audio n'a été trouvé.", ephemeral=True)
-            return None
-        
-        tracking = self.get_user(transcript_author.id)
-        if tracking and tracking['banned']:
-            return
-        
-        await interaction.followup.send(f"Transcription en cours de traitement pour le message de {audio_message.author.mention}...", ephemeral=True)
-        
-        full_text = ''
-        full_duration = 0
-        for aud in audios:
-            full_duration += aud.duration if aud.duration else 0
-            buffer = io.BytesIO()
-            buffer.name = aud.filename
-            await aud.save(buffer)
-            buffer.seek(0)
-            try:
-                transcript = await self.client.audio.transcriptions.create(
-                    model='whisper-1',
-                    file=buffer
-                )
-            except Exception as e:
-                logger.error(f"ERREUR OPENAI : {e}", exc_info=True)
-                return None
-
-            full_text += transcript.text + '\n'
-        
-        if not full_text:
-            await interaction.followup.send(f"**Erreur** × Aucun texte n'a pu être transcrit depuis ce(s) fichier(s) audio.")
-            return None
-        
-        await interaction.delete_original_response()
-        
-        usage = self.get_user(transcript_author.id)
-        # 0.006$ par minute de transcription = 10 000 tokens par minute 
-        cost = (full_duration / 60) * 10000
-        if usage:
-            self.update_usage(transcript_author.id, completion_tokens=round(cost))
-        
-        if len(full_text) > 1900:
-            return await audio_message.reply(f"**Transcription demandée par {transcript_author.mention} :**\n{full_text[:1900]}...", mention_author=False)
-        
-        await audio_message.reply(f"**Transcription demandée par {transcript_author.mention} :**\n{full_text}", mention_author=False)
-            
     
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -633,14 +572,6 @@ class GPT(commands.Cog):
                 mentioned_message = ref_message
             
         await self.handle_mention_message(message, mentioned_message=mentioned_message)
-        
-    async def transcript_audio_callback(self, interaction: Interaction, message: discord.Message):
-        """Callback pour demander la transcription d'un message audio via le menu contextuel."""
-        if interaction.channel_id != message.channel.id:
-            return await interaction.response.send_message("**Action impossible** × Le message doit être dans le même salon", ephemeral=True)
-        if not message.attachments:
-            return await interaction.response.send_message("**Erreur** × Aucun fichier n'est attaché au message.", ephemeral=True)
-        return await self.handle_speech_to_text(interaction, message, interaction.user)
         
     # COMMANDES ---------------------------------------------------------------
     
