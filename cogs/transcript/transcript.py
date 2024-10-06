@@ -121,7 +121,7 @@ class Transcript(commands.Cog):
         if not file_or_buffer:
             return await interaction.followup.send(f"**Erreur** × Le fichier audio n'a pas pu être récupéré.", ephemeral=True)
         
-        await interaction.followup.send(f"Transcription en cours de traitement...", ephemeral=True)
+        await notif.edit(content=f"Transcription en cours de traitement...")
         
         transcript = await self.audio_transcription(file_or_buffer)
         if not transcript:
