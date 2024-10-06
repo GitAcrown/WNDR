@@ -108,7 +108,10 @@ class Transcript(commands.Cog):
         if not message.attachments or not attach_type:
             return await interaction.followup.send(f"**Erreur** × Aucun fichier supporté n'est attaché au message.", ephemeral=True)
         
+        notif = await interaction.followup.send(f"Récupération de l'audio en cours...", ephemeral=True, wait=True)
+        
         if attach_type.startswith('video'):
+            await notif.edit(content="Conversion de la vidéo en fichier audio...")
             file_or_buffer = await self.get_audio_from_video(message)
         elif attach_type.startswith('audio'):
             file_or_buffer = await self.get_audio(message)
@@ -118,7 +121,7 @@ class Transcript(commands.Cog):
         if not file_or_buffer:
             return await interaction.followup.send(f"**Erreur** × Le fichier audio n'a pas pu être récupéré.", ephemeral=True)
         
-        await interaction.followup.send(f"Transcription en cours de traitement pour le message de {message.author.mention}...", ephemeral=True)
+        await interaction.followup.send(f"Transcription en cours de traitement...", ephemeral=True)
         
         transcript = await self.audio_transcription(file_or_buffer)
         if not transcript:
