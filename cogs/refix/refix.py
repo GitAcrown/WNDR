@@ -8,6 +8,8 @@ from discord.ext import commands
 
 from datetime import datetime
 
+from pytz import utc
+
 from common import dataio
 from common.utils import fuzzy, pretty
 
@@ -184,7 +186,7 @@ class ReFix(commands.Cog):
             return
         if reaction.emoji != '🔗':
             return
-        if (datetime.now() - reaction.message.created_at).total_seconds() > 600: # Si le message a plus de 10 minutes, on ne fait rien
+        if (datetime.now(utc) - reaction.message.created_at).total_seconds() > 600: # Si le message a plus de 10 minutes, on ne fait rien
             return
         if reaction.message.id in self.__fixed:
             return
