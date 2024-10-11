@@ -1,11 +1,12 @@
 import asyncio
 import logging
 import re
-from typing import Callable
 
 import discord
 from discord import Interaction, app_commands
 from discord.ext import commands
+
+from datetime import datetime
 
 from common import dataio
 from common.utils import fuzzy, pretty
@@ -182,6 +183,8 @@ class ReFix(commands.Cog):
         if not reaction.message.guild:
             return
         if reaction.emoji != '🔗':
+            return
+        if (reaction.message.created_at - datetime.now()).total_seconds() > 600: # Si le message a plus de 10 minutes, on ne fait rien
             return
         if reaction.message.id in self.__fixed:
             return
