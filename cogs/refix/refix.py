@@ -64,12 +64,6 @@ class FixLinkMenu(discord.ui.View):
             await self.link_message.edit(suppress=True)
         except discord.HTTPException:
             pass
-        
-    async def interaction_check(self, interaction: Interaction):
-        if interaction.user != self.link_message.author:
-            await interaction.response.send_message("Vous n'êtes pas autorisé à utiliser ce menu.", ephemeral=True)
-            return False
-        return True
     
     @discord.ui.button(label='<', style=discord.ButtonStyle.secondary)
     async def previous(self, interaction: Interaction, button: discord.ui.Button):
@@ -118,10 +112,25 @@ class ReFix(commands.Cog):
         )
         self.data.link('fixers', enabled_fixers)
         
+        settings = dataio.DictTableBuilder(
+            'settings',
+            {
+                'auto_fix': False # Ne pas attendre la réaction pour corriger automatiquement les liens
+            }
+        )
+        self.data.link(discord.Guild, settings)
         self.__fixed = []
         
     def cog_unload(self):
         self.data.close_all()
+        
+    # Paramètres ----------------------------------------------------------------
+    
+    def get_auto_fix(self, guild: discord.Guild):
+        return self.data.get(guild).get_dict_value('settings', 'auto_fix', cast=bool)
+    
+    def set_auto_fix(self, guild: discord.Guild, value: bool):
+        self.data.get(guild).set_dict_value('settings', 'auto_fix', value)  
         
     # Gestion des corrections de liens ------------------------------------------
     
@@ -162,7 +171,9 @@ class ReFix(commands.Cog):
             return
         if not message.guild:
             return
-        
+        auto_fix = self.get_auto_fix(message.guild)
+        if auto_fix:
+            return
         for url in re.findall(r'https?://[^\s]+', message.content):
             label = self.get_label_from_url(url)
             if not label:
@@ -184,12 +195,14 @@ class ReFix(commands.Cog):
             return
         if not reaction.message.guild:
             return
-        if reaction.emoji != '🔗':
-            return
-        if (datetime.now(utc) - reaction.message.created_at).total_seconds() > 600: # Si le message a plus de 10 minutes, on ne fait rien
-            return
-        if reaction.message.id in self.__fixed:
-            return
+        auto_fix = self.get_auto_fix(reaction.message.guild)
+        if not auto_fix:    
+            if reaction.emoji != '🔗':
+                return
+            if (datetime.now(utc) - reaction.message.created_at).total_seconds() > 600: # Si le message a plus de 10 minutes, on ne fait rien
+                return
+            if reaction.message.id in self.__fixed:
+                return
         links = re.findall(r'https?://[^\s]+', reaction.message.content)
         if not links:
             return
@@ -250,6 +263,17 @@ class ReFix(commands.Cog):
             return await interaction.response.send_message('**Erreur** × Ce correcteur de lien n\'existe pas.', ephemeral=True)
         self.set_fixer(interaction.guild_id, label, enabled)
         await interaction.response.send_message(f'**Modifié** • Correcteur de lien `{label}` {'activé' if enabled else 'désactivé'} avec succès.', ephemeral=True)
+        
+    @fix_group.command(name='auto')
+    @app_commands.rename(enabled='activer')
+    async def fix_auto(self, interaction: Interaction, enabled: bool):
+        """Active ou désactive la correction automatique des liens
+        
+        :param enabled: Activer ou désactiver la correction automatique"""
+        if not interaction.guild:
+            return await interaction.response.send_message('Cette commande ne peut être utilisée que sur un serveur.', ephemeral=True)
+        self.set_auto_fix(interaction.guild, enabled)
+        await interaction.response.send_message(f'**Modifié** • Correction automatique des liens {'activée' if enabled else 'désactivée'} avec succès.', ephemeral=True)
         
     @fix_set.autocomplete('label')
     async def fix_autocomplete_label(self, interaction: Interaction, current: str):
