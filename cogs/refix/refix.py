@@ -171,9 +171,7 @@ class ReFix(commands.Cog):
             return
         if not message.guild:
             return
-        auto_fix = self.get_auto_fix(message.guild)
-        if auto_fix:
-            return
+        to_delete = False
         for url in re.findall(r'https?://[^\s]+', message.content):
             label = self.get_label_from_url(url)
             if not label:
@@ -186,23 +184,25 @@ class ReFix(commands.Cog):
             for fixer in fixers:
                 patterns = LINK_FIXERS[fixer]['search']
                 if re.search(patterns, url):
+                    to_delete = True
                     await message.add_reaction('🔗')
                     break
+        if to_delete:
+            await asyncio.sleep(60)
+            await message.clear_reaction('🔗')
                 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         if user.bot:
             return
         if not reaction.message.guild:
+            return 
+        if reaction.emoji != '🔗':
             return
-        auto_fix = self.get_auto_fix(reaction.message.guild)
-        if not auto_fix:    
-            if reaction.emoji != '🔗':
-                return
-            if (datetime.now(utc) - reaction.message.created_at).total_seconds() > 600: # Si le message a plus de 10 minutes, on ne fait rien
-                return
-            if reaction.message.id in self.__fixed:
-                return
+        if (datetime.now(utc) - reaction.message.created_at).total_seconds() > 600: # Si le message a plus de 10 minutes, on ne fait rien
+            return
+        if reaction.message.id in self.__fixed:
+            return
         links = re.findall(r'https?://[^\s]+', reaction.message.content)
         if not links:
             return
@@ -263,17 +263,6 @@ class ReFix(commands.Cog):
             return await interaction.response.send_message('**Erreur** × Ce correcteur de lien n\'existe pas.', ephemeral=True)
         self.set_fixer(interaction.guild_id, label, enabled)
         await interaction.response.send_message(f'**Modifié** • Correcteur de lien `{label}` {'activé' if enabled else 'désactivé'} avec succès.', ephemeral=True)
-        
-    @fix_group.command(name='auto')
-    @app_commands.rename(enabled='activer')
-    async def fix_auto(self, interaction: Interaction, enabled: bool):
-        """Active ou désactive la correction automatique des liens
-        
-        :param enabled: Activer ou désactiver la correction automatique"""
-        if not interaction.guild:
-            return await interaction.response.send_message('Cette commande ne peut être utilisée que sur un serveur.', ephemeral=True)
-        self.set_auto_fix(interaction.guild, enabled)
-        await interaction.response.send_message(f'**Modifié** • Correction automatique des liens {'activée' if enabled else 'désactivée'} avec succès.', ephemeral=True)
         
     @fix_set.autocomplete('label')
     async def fix_autocomplete_label(self, interaction: Interaction, current: str):
