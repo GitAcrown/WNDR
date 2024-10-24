@@ -65,10 +65,10 @@ class FixLinkMenu(discord.ui.View):
         except discord.HTTPException:
             pass
     
-    @discord.ui.button(label='<', style=discord.ButtonStyle.secondary)
-    async def previous(self, interaction: Interaction, button: discord.ui.Button):
+    @discord.ui.button(label="Changer d'intég.", style=discord.ButtonStyle.blurple)
+    async def switch(self, interaction: Interaction, button: discord.ui.Button):
         await interaction.response.defer(ephemeral=True)
-        self._current = (self._current - 1) % len(self.fixed_links)
+        self._current = (self._current + 1) % len(self.fixed_links)
         if self.replacement_message:
             await self.replacement_message.edit(content=self.fixed_links[self._current], allowed_mentions=discord.AllowedMentions.none())
         
@@ -82,13 +82,6 @@ class FixLinkMenu(discord.ui.View):
             except discord.HTTPException:
                 pass
         self.stop()
-        
-    @discord.ui.button(label='>', style=discord.ButtonStyle.secondary)
-    async def next(self, interaction: Interaction, button: discord.ui.Button):
-        await interaction.response.defer(ephemeral=True)
-        self._current = (self._current + 1) % len(self.fixed_links)
-        if self.replacement_message:
-            await self.replacement_message.edit(content=self.fixed_links[self._current], allowed_mentions=discord.AllowedMentions.none())
             
     async def on_timeout(self):
         if self.replacement_message:
