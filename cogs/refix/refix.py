@@ -43,6 +43,12 @@ LINK_FIXERS = {
             'https://vm.vxtiktok.com/',
             'https://fixtiktok.com/'
         ]
+    },
+    'instagram.com': {
+        'search': r'https?://(?:www\.)?instagram\.com/',
+        'replace': [
+            'https://ddinstagram.com/',
+        ]
     }
 }
 
@@ -51,7 +57,7 @@ LINK_FIXERS = {
 class FixLinkMenu(discord.ui.View):
     """Menu permettant de changer de correcteur de lien."""
     def __init__(self, link_message: discord.Message, fixed_links: list[str]):
-        super().__init__(timeout=20)
+        super().__init__(timeout=120)
         self.link_message = link_message
         self.replacement_message = None
         self.fixed_links = fixed_links
