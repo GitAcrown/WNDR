@@ -72,7 +72,7 @@ class Extract(commands.Cog):
             link_button = discord.ui.Button(label="Aller au message", url=message.jump_url)
             view = discord.ui.View()
             view.add_item(link_button)
-            return await interaction.response.send_message(f"**Message de départ défini** · Vous pouvez maintenant sélectionner le message d'arrivée avec la même commande contextuelle.", embed=msg_embed, view=view, ephemeral=True)
+            return await interaction.response.send_message(f"**Message de départ défini** · Vous pouvez maintenant sélectionner le message d'arrivée avec __la même commande contextuelle__.", embed=msg_embed, view=view, ephemeral=True)
         
         # Si le message de départ est le même que le message d'arrivée	
         if session['start'].id == message.id:
@@ -80,7 +80,8 @@ class Extract(commands.Cog):
         
         # Si il y a plus de 24h entre les deux messages
         if (message.created_at - session['start'].created_at).total_seconds() > 86400:
-            return await interaction.response.send_message("**Erreur** · Les deux messages doivent être envoyés dans un intervalle de moins de 24h.", ephemeral=True)
+            del self._export_sessions[f"{user.id}:{channel.id}"]
+            return await interaction.response.send_message("**Erreur** · Les deux messages doivent être envoyés dans un intervalle de moins de 24h. Le message de départ a été __réinitialisé__.", ephemeral=True)
         
         # Si le message d'arrivée est antérieur au message de départ on les inverse
         if session['start'].created_at > message.created_at:
