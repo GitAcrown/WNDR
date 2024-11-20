@@ -69,7 +69,10 @@ class Extract(commands.Cog):
         # Définir le message de départ si ce n'est pas déjà fait
         if not session or 'start' not in session:
             self._export_sessions[f"{user.id}:{channel.id}"] = {'start': message}
-            return await interaction.response.send_message(f"**Message de départ défini** · Vous pouvez maintenant sélectionner le message d'arrivée avec la même commande contextuelle.", embed=msg_embed, ephemeral=True)
+            link_button = discord.ui.Button(label="Aller au message", url=message.jump_url)
+            view = discord.ui.View()
+            view.add_item(link_button)
+            return await interaction.response.send_message(f"**Message de départ défini** · Vous pouvez maintenant sélectionner le message d'arrivée avec la même commande contextuelle.", embed=msg_embed, view=view, ephemeral=True)
         
         # Si le message de départ est le même que le message d'arrivée	
         if session['start'].id == message.id:
