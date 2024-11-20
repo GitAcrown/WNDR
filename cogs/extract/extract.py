@@ -35,7 +35,7 @@ class Extract(commands.Cog):
     
     async def export_messages_between(self, start: discord.Message, end: discord.Message):
         """Extrait le texte entre deux messages."""
-        messages = []
+        messages = [start]
         async for message in start.channel.history(limit=None, after=start):
             messages.append(message)
             if message.id == end.id:
