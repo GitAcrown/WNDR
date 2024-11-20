@@ -98,5 +98,42 @@ class Extract(commands.Cog):
         del self._export_sessions[f"{user.id}:{channel.id}"]
         await interaction.edit_original_response(content="**Exportation terminée** · Voici le texte extrait entre les deux messages.", attachments=[textfile])
         
+    # Commande -----------------------------------------------------------------
+    
+    @app_commands.command(name="exporter")
+    @app_commands.rename(start_message_id='id_msg_départ', end_message_id='id_msg_arrivée')
+    async def export_text_command(self, interaction: Interaction, start_message_id: int, end_message_id: int):
+        """Exporte le texte entre deux messages.
+        
+        :param start_message_id: ID du message de départ.
+        :param end_message_id: ID du message d'arrivée."""
+        channel = interaction.channel
+        if not isinstance(channel, (discord.TextChannel, discord.Thread)):
+            return await interaction.response.send_message("**Erreur** · Cette commande ne peut être utilisée que dans un salon texte ou un fil de discussion.", ephemeral=True)
+        
+        try:
+            start_message = await channel.fetch_message(start_message_id)
+            end_message = await channel.fetch_message(end_message_id)
+        except discord.NotFound:
+            return await interaction.response.send_message("**Erreur** · Les messages spécifiés n'ont pas été trouvés.", ephemeral=True)
+        
+        # Si le message de départ est le même que le message d'arrivée
+        if start_message.id == end_message.id:
+            return await interaction.response.send_message("**Erreur** · Les deux messages ne peuvent pas être les mêmes.", ephemeral=True)
+        
+        # Plus de 24h entre les deux messages
+        if (end_message.created_at - start_message.created_at).total_seconds() > 86400:
+            return await interaction.response.send_message("**Erreur** · Les deux messages doivent être envoyés dans un intervalle de moins de 24h.", ephemeral=True)
+        
+        # Si le message d'arrivée est antérieur au message de départ on les inverse
+        if start_message.created_at > end_message.created_at:
+            start_message, end_message = end_message, start_message
+        
+        await interaction.response.send_message(f"**Messages trouvés** · Veuillez patienter pendant l'exportation...", ephemeral=True)
+        text = await self.export_messages_between(start_message, end_message)
+        text = self.messages_to_text(text)
+        textfile = discord.File(io.BytesIO(text.encode()), filename="export.txt")
+        await interaction.edit_original_response(content="**Exportation terminée** · Voici le texte extrait entre les deux messages.", attachments=[textfile])
+        
 async def setup(bot):
     await bot.add_cog(Extract(bot))
