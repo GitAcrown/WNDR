@@ -102,7 +102,7 @@ class Extract(commands.Cog):
     
     @app_commands.command(name="exporter")
     @app_commands.rename(start_message_id='id_msg_départ', end_message_id='id_msg_arrivée')
-    async def export_text_command(self, interaction: Interaction, start_message_id: int, end_message_id: int):
+    async def export_text_command(self, interaction: Interaction, start_message_id: str, end_message_id: str):
         """Exporte le texte entre deux messages.
         
         :param start_message_id: ID du message de départ.
@@ -112,8 +112,8 @@ class Extract(commands.Cog):
             return await interaction.response.send_message("**Erreur** · Cette commande ne peut être utilisée que dans un salon texte ou un fil de discussion.", ephemeral=True)
         
         try:
-            start_message = await channel.fetch_message(start_message_id)
-            end_message = await channel.fetch_message(end_message_id)
+            start_message = await channel.fetch_message(int(start_message_id))
+            end_message = await channel.fetch_message(int(end_message_id))
         except discord.NotFound:
             return await interaction.response.send_message("**Erreur** · Les messages spécifiés n'ont pas été trouvés.", ephemeral=True)
         
