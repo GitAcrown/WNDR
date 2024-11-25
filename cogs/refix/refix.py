@@ -41,6 +41,7 @@ LINK_FIXERS = {
         'search': r'https?://(?:www\.)?vm\.tiktok\.com/',
         'replace': [
             'https://vm.vxtiktok.com/',
+            'https://vm.tfxktok.com/'
             'https://fixtiktok.com/'
         ]
     },
