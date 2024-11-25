@@ -34,15 +34,16 @@ LINK_FIXERS = {
         'search': r'https?://(?:www\.)?tiktok\.com/',
         'replace': [
             'https://vm.vxtiktok.com/',
-            'https://fixtiktok.com/'
+            'https://fixtiktok.com/',
+            'https://vm.tfxktok.com/'
         ]
     },
     'vm.tiktok.com': {
         'search': r'https?://(?:www\.)?vm\.tiktok\.com/',
         'replace': [
             'https://vm.vxtiktok.com/',
+            'https://fixtiktok.com/',
             'https://vm.tfxktok.com/'
-            'https://fixtiktok.com/'
         ]
     },
     'instagram.com': {
