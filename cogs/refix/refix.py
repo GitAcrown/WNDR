@@ -30,6 +30,12 @@ LINK_FIXERS = {
             'https://vxtwitter.com/'
         ]
     },
+    'bsky.app': {
+        'search': r'https?://(?:www\.)?bsky\.app/',
+        'replace': [
+            'https://vxbsky.app/'
+        ]
+    },
     'tiktok.com': {
         'search': r'https?://(?:www\.)?tiktok\.com/',
         'replace': [
