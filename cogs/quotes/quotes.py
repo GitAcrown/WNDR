@@ -458,7 +458,7 @@ class Quotes(commands.Cog):
             message_channel_name = 'MP'
         else:
             message_channel_name = messages[0].channel.name if messages[0].channel.name else 'Inconnu'
-        bg = await self.get_user_background(base_message.author, 25)
+        bg = await self.get_user_background(base_message.author, 10)
         bg = self._add_gradient_dir(bg, 0.7, direction='top_to_bottom')
         full_content = pretty.shorten_text(' '.join([self._normalize_text(m.content) for m in messages]), 800)
         author_name = f"@{base_message.author.name}" if not base_message.author.nick else f"{base_message.author.nick} (@{base_message.author.name})"
