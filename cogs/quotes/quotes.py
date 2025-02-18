@@ -225,7 +225,8 @@ class Quotes(commands.Cog):
         avatar = BytesIO(await user.display_avatar.read())
         avatar = Image.open(avatar).convert('RGBA').resize((512, 512))
         bg = copy.copy(avatar)
-        bg = cv2.GaussianBlur(np.array(bg), (blur_radius, blur_radius), 0)
+        ksize = blur_radius if blur_radius % 2 == 1 else (blur_radius - 1 if blur_radius > 1 else 1)
+        bg = cv2.GaussianBlur(np.array(bg), (ksize, ksize), 0)
         bg = Image.fromarray(bg)
         self.__user_backgrounds[f'{user.guild.id}-{user.id}-{blur_radius}'] = bg
         return bg
