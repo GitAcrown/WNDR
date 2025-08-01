@@ -57,7 +57,7 @@ class AvatarPreviewSelectMenu(discord.ui.View):
 
     # Boutons ------------------------------------------------------------------
     
-    @discord.ui.button(style=discord.ButtonStyle.grey, emoji=pretty.DEFAULT_ICONS_EMOJIS['back'])
+    @discord.ui.button(style=discord.ButtonStyle.grey, label='<')
     async def previous_button(self, interaction: Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         self.current_page -= 1
@@ -78,7 +78,7 @@ class AvatarPreviewSelectMenu(discord.ui.View):
         self.stop()
         await interaction.edit_original_response(view=None)
         
-    @discord.ui.button(style=discord.ButtonStyle.grey, emoji=pretty.DEFAULT_ICONS_EMOJIS['next'])
+    @discord.ui.button(style=discord.ButtonStyle.grey, label='>')
     async def next_button(self, interaction: Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         self.current_page += 1
